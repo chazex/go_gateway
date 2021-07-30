@@ -9,10 +9,13 @@ import (
 	"strings"
 )
 
-var ConfEnvPath string //配置文件夹
+var ConfEnvPath string //配置文件夹 （包含了ConfEnv）
 var ConfEnv string     //配置环境名 比如：dev prod test
 
 // 解析配置文件目录
+// 路径约定：/xx/xx/xx/{env}/{filename}
+//		   /xx/xx/xx/{env} -> ConfEnvPath
+//					 {env} -> ConfEnv
 //
 // 配置文件必须放到一个文件夹中
 // 如：config=conf/dev/base.json 	ConfEnvPath=conf/dev	ConfEnv=dev

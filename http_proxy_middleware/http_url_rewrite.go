@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-//匹配接入方式 基于请求信息
+// 根据配置，修改请求路径（支持正则）
 func HTTPUrlRewriteMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		serverInterface, ok := c.Get("service")
@@ -22,7 +22,7 @@ func HTTPUrlRewriteMiddleware() gin.HandlerFunc {
 		for _,item:=range strings.Split(serviceDetail.HTTPRule.UrlRewrite,","){
 			//fmt.Println("item rewrite",item)
 			items:=strings.Split(item," ")
-			if len(items)!=2{
+			if len(items) != 2 {
 				continue
 			}
 			regexp,err:=regexp.Compile(items[0])

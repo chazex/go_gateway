@@ -81,6 +81,9 @@ func GetBaseConf() *BaseConf {
 	return ConfBase
 }
 
+/**
+	初始化 conf/{env}/base.toml
+ */
 func InitBaseConf(path string) error {
 	ConfBase = &BaseConf{}
 	err := ParseConfig(path, ConfBase)
@@ -148,6 +151,7 @@ func InitRedisConf(path string) error {
 }
 
 //初始化配置文件
+// 为每一个配置文件 初始化一个viper，并存储在map中
 func InitViperConf() error {
 	f, err := os.Open(ConfEnvPath + "/")
 	if err != nil {
@@ -166,17 +170,19 @@ func InitViperConf() error {
 			v := viper.New()
 			v.SetConfigType("toml")
 			v.ReadConfig(bytes.NewBuffer(bts))
-			pathArr := strings.Split(f0.Name(), ".")
+			pathArr := strings.Split(f0.Name(), ".") // 去掉后缀（.toml)
 			if ViperConfMap == nil {
 				ViperConfMap = make(map[string]*viper.Viper)
 			}
-			ViperConfMap[pathArr[0]] = v
+			ViperConfMap[pathArr[0]] = v // key = base mysql_map proxy redis_map (其实就是配置文件的文件名)
 		}
 	}
 	return nil
 }
 
 //获取get配置信息
+// key约定：key使用.分隔，第一部分是配置文件的文件名，用来从ViperConfMap中获取到对应的Viper对象
+// 		如 proxy.base.debug_mode  -> 去proxy.toml 中的 base.debug_mode的值
 func GetStringConf(key string) string {
 	keys := strings.Split(key, ".")
 	if len(keys) < 2 {

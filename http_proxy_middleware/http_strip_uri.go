@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-//匹配接入方式 基于请求信息
+// 根据配置，修改path -> 将规则中指定的部分替换为空
 func HTTPStripUriMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		serverInterface, ok := c.Get("service")

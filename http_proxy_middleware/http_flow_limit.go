@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// 限流
 func HTTPFlowLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		serverInterface, ok := c.Get("service")

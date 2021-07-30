@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-//匹配接入方式 基于请求信息
+// 根据配置修改请求头(支持增加，修改，删除)，多项使用空格分隔
 func HTTPHeaderTransferMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		serverInterface, ok := c.Get("service")

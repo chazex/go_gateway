@@ -11,10 +11,10 @@ import (
 type RedisFlowCountService struct {
 	AppID       string
 	Interval    time.Duration
-	QPS         int64
+	QPS         int64	// 两次Ticker之间的qps
 	Unix        int64
-	TickerCount int64
-	TotalCount  int64
+	TickerCount int64	// 两次ticker之间的请求数量缓存，每次ticker后会清空。
+	TotalCount  int64	// 上次ticker时，当天的总量
 }
 
 func NewRedisFlowCountService(appID string, interval time.Duration) *RedisFlowCountService {
@@ -32,23 +32,28 @@ func NewRedisFlowCountService(appID string, interval time.Duration) *RedisFlowCo
 		}()
 		ticker := time.NewTicker(interval)
 		for {
+			// 定期将数据刷到redis，并重置本地数据。
 			<-ticker.C
+
+			// 重置本地数据，需要原子操作。
 			tickerCount := atomic.LoadInt64(&reqCounter.TickerCount) //获取数据
 			atomic.StoreInt64(&reqCounter.TickerCount, 0)            //重置数据
 
+			// 叠加到当天，当前小时
 			currentTime := time.Now()
 			dayKey := reqCounter.GetDayKey(currentTime)
 			hourKey := reqCounter.GetHourKey(currentTime)
 			if err := RedisConfPipline(func(c redis.Conn) {
 				c.Send("INCRBY", dayKey, tickerCount)
-				c.Send("EXPIRE", dayKey, 86400*2)
+				c.Send("EXPIRE", dayKey, 86400*2) // 过期时间，2天
 				c.Send("INCRBY", hourKey, tickerCount)
-				c.Send("EXPIRE", hourKey, 86400*2)
+				c.Send("EXPIRE", hourKey, 86400*2) // 过期时间，2天
 			}); err != nil {
 				fmt.Println("RedisConfPipline err",err)
 				continue
 			}
 
+			// 查询一下，当前的总量
 			totalCount, err := reqCounter.GetDayData(currentTime)
 			if err != nil {
 				fmt.Println("reqCounter.GetDayData err",err)
@@ -59,10 +64,10 @@ func NewRedisFlowCountService(appID string, interval time.Duration) *RedisFlowCo
 				reqCounter.Unix = time.Now().Unix()
 				continue
 			}
-			tickerCount = totalCount - reqCounter.TotalCount
+			tickerCount = totalCount - reqCounter.TotalCount // 本次ticker的当天总量 - 上次ticker的当天总量
 			if nowUnix > reqCounter.Unix {
-				reqCounter.TotalCount = totalCount
-				reqCounter.QPS = tickerCount / (nowUnix - reqCounter.Unix)
+				reqCounter.TotalCount = totalCount // 保存本次ticker的当天总量，为了下次ticker使用
+				reqCounter.QPS = tickerCount / (nowUnix - reqCounter.Unix) // 最近两次ticker的差值 / 时间差 = 两次ticker之间的qps
 				reqCounter.Unix = time.Now().Unix()
 			}
 		}

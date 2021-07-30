@@ -65,24 +65,27 @@ func (s *ServiceManager) GetGrpcServiceList() []*ServiceDetail {
 	return list
 }
 
+// 根据请求，获取HTTP的负载方式，以及规则
 func (s *ServiceManager) HTTPAccessMode(c *gin.Context) (*ServiceDetail, error) {
 	//1、前缀匹配 /abc ==> serviceSlice.rule
 	//2、域名匹配 www.test.com ==> serviceSlice.rule
 	//host c.Request.Host
 	//path c.Request.URL.Path
 	host := c.Request.Host
-	host = host[0:strings.Index(host, ":")]
+	host = host[0:strings.Index(host, ":")] // 去掉端口
 	path := c.Request.URL.Path
 	for _, serviceItem := range s.ServiceSlice {
 		if serviceItem.Info.LoadType != public.LoadTypeHTTP {
 			continue
 		}
 		if serviceItem.HTTPRule.RuleType == public.HTTPRuleTypeDomain {
+			// 域名匹配模式
 			if serviceItem.HTTPRule.Rule == host {
 				return serviceItem, nil
 			}
 		}
 		if serviceItem.HTTPRule.RuleType == public.HTTPRuleTypePrefixURL {
+			// 路径前缀匹配模式
 			if strings.HasPrefix(path, serviceItem.HTTPRule.Rule) {
 				return serviceItem, nil
 			}

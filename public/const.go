@@ -5,12 +5,12 @@ const (
 	TranslatorKey       = "TranslatorKey"
 	AdminSessionInfoKey = "AdminSessionInfoKey"
 
-	LoadTypeHTTP = 0
-	LoadTypeTCP  = 1
-	LoadTypeGRPC = 2
+	LoadTypeHTTP = 0 // 负载类型http
+	LoadTypeTCP  = 1 // 负载类型tcp
+	LoadTypeGRPC = 2 // 负载类型grpc
 
-	HTTPRuleTypePrefixURL = 0
-	HTTPRuleTypeDomain    = 1
+	HTTPRuleTypePrefixURL = 0 // HTTP匹配类型， URL Path前缀匹配
+	HTTPRuleTypeDomain    = 1 // HTTP匹配类型， 域名匹配
 
 	RedisFlowDayKey  = "flow_day_count"
 	RedisFlowHourKey = "flow_hour_count"
